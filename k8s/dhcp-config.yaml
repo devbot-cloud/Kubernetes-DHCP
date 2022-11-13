@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dhcp-config
+  namespace: dhcp-server
+type: Opaque
+stringData:
+  dhcpd.conf: |
+    option domain-name "vm.lootbot.cloud";
+    option domain-name-servers 192.168.1.1;
+
+    update-conflict-detection true;
+
+    default-lease-time 600;
+    max-lease-time 7200;
+
+    authoritative;
+
+    # No service will be given on this subnet, but declaring it helps the 
+    # DHCP server to understand the network topology.
+    # subnet-mgmt
+    subnet 10.11.0.1 netmask 255.255.255.0 {
+    }
+
+    # subnet-vm-1
+    subnet 10.10.1.0 netmask 255.255.255.0 {
+      range 10.10.1.25 10.10.1.254;
+      option domain-name-servers 192.168.1.1;
+      option domain-name "vm.lootbot.cloud";
+      option routers 10.10.1.1;
+      option broadcast-address 10.10.1.255;
+      default-lease-time 600;
+      max-lease-time 7200;
+    }
+    # subnet-vm-2
+    subnet 10.10.2.0 netmask 255.255.255.0 {
+      range 10.10.2.25 10.10.2.254;
+      option domain-name-servers 192.168.1.1;
+      option domain-name "vm.lootbot.cloud";
+      option routers 10.10.2.1;
+      option broadcast-address 10.10.2.255;
+      default-lease-time 600;
+      max-lease-time 7200;
+    }

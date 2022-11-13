@@ -1,0 +1,6 @@
+namespace: dhcp-server
+resources:
+  - namespace.yaml
+  - deployment.yaml
+  - pvc.yaml
+  - dhcp-config.yaml

@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dhcp-leases
+  namespace: dhcp-server
+  labels:
+    app.kubernetes.io/name: dhcpleases
+    app.kubernetes.io/instance: dhcpleases
+    app.kubernetes.io/component: dhcp-server
+    app.kubernetes.io/part-of: dhcp-server
+spec:
+  accessModes:
+    - ReadWriteMany
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi

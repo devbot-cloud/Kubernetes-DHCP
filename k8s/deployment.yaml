@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dhcp-server
+  namespace: dhcp-server
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: dhcp-server
+      app.kubernetes.io/part-of: dhcp-server
+  replicas: 1
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dhcp-server
+        app.kubernetes.io/instance: dhcp-server
+        app.kubernetes.io/component: dhcp-server
+        app.kubernetes.io/part-of: dhcp-server
+    spec:
+      hostNetwork: true
+      containers:
+      - name: dhcp4
+        image: ghcr.io/devbot-cloud/kubernetes-dhcp:v1
+        resources:
+          requests:
+            memory: 10Mi
+            cpu: 10m
+          limits:
+            memory: 200Mi
+            cpu: 500m
+        volumeMounts:
+          - mountPath: "/var/lib/dhcp"
+            name: dhcp-leases
+            readOnly: false
+          - mountPath: "/etc/dhcp"
+            name: dhcp-secrets
+            readOnly: true
+        ports:
+          - containerPort: 67
+            hostPort: 67
+            protocol: UDP
+            name: dhcp
+      volumes:
+        - name: dhcp-leases
+          persistentVolumeClaim:
+            claimName: dhcp-leases
+        - name: dhcp-secrets
+          secret:
+            secretName: dhcp-config
