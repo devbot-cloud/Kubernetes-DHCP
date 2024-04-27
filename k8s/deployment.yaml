@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dhcp-server
-  namespace: dhcp-server
 spec:
   selector:
     matchLabels:
@@ -19,8 +18,13 @@ spec:
         app.kubernetes.io/part-of: dhcp-server
     spec:
       hostNetwork: true
+      initContainers:
+        # the concept is to check for the existance of the lease file located at /leases/leases.dhcp
+        - name: init-leases
+          image: $LEASEFILE_IMAGE
+          
       containers:
-      - name: dhcp4
+      - name: dhcp
         image: ghcr.io/devbot-cloud/kubernetes-dhcp:v1
         resources:
           requests:
