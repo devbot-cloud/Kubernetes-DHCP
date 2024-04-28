@@ -22,6 +22,7 @@ kubectl apply -k ./k8s
 - dhcp-backup will use the /dhcpd/leases and /dhcpd/config files running and backup a tar file to an S3 bucket of choice 
 - it is intended to be run via a kubernetes cronjob to facilitate backups being taken pieroticly.
 
+- dhcp-backup runs at a rootless user (1000) the intention is that the fsgroup will get set to 1000 so that the backupuser can access the files from the dhcp server
 ### Running dhcp-backup 
 
 - Docker run command with the bucket access information passed in as envioment variables

@@ -1,0 +1,15 @@
+{{- if .Values.pvc.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "dhcp-k8s.primaryname" . }}
+  labels:
+    {{- include "dhcp-k8s.primarylabels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: {{ default "" .Values.pvc.storageClassName | quote  }}
+  resources:
+    requests:
+      storage: {{ default "1Gi" .Values.pvc.storage }}
+{{- end }}

@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "dhcp-k8s.primaryname" . }}
+  namespace: {{ .Release.Namespace }}
+data:
+  dhcpd.conf: |
+
+    # Global Configuration
+    {{- if .Values.global.option }}
+    {{- with .Values.global }}
+    {{- if .option }}
+    {{- range .option }}
+    option {{ .name }} {{ .value }};
+    {{- end }}
+    {{- end }}
+    {{- end }}
+    {{- end }}
+
+    {{- if .Values.global.defaultLeaseTime }}
+    default-lease-time {{ .Values.global.defaultLeaseTime }};
+    {{- else }}
+    default-lease-time {{ .Values.global.defaultLeaseTime }};
+    {{- end }}
+    {{- if .Values.global.maxLeaseTime }}
+    max-lease-time {{ .Values.global.maxLeaseTime }};
+    {{- end }}
+    authoritative;
+    update-conflict-detection true;
+
+    {{- if .Values.global.extra }}
+    # Custom Global Extra Text
+    {{ .Values.global.extra }}
+    {{- end }}
+
+
+    {{- range .Values.subnet }}
+    # Subnet {{ .name }}
+    subnet {{ .cidr }} netmask {{ .netmask }} {
+      {{- range .range }}
+      range {{ .first }} {{ .last }};
+      {{- end }}
+      {{- if .option }}
+      {{- range .option }}
+      option {{ .name }} {{ .value }};
+      {{- end }}
+      {{- end }}
+      {{- if .defaultLeaseTime }}
+      default-lease-time {{ .defaultLeaseTime }};
+      {{- end }}
+      {{- if .maxLeaseTime }}
+      max-lease-time {{ .maxLeaseTime }};
+      {{- end }}
+      {{- if .extra }}
+      # Custom Subnet Extra Text
+      {{ .extra }}
+      {{- end }}
+    }
+    {{- end }}

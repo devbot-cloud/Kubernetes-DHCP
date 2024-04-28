@@ -1,0 +1,79 @@
+### dhcp-server values.yaml 
+# - DHCP server in kubernetes allows for the defaining of DHCP pools and settings via yaml 
+# - Streamlining the way you deploy and manage a DHCP pool
+
+# DHCP currently only supports running 1 rpelica as they both will overwrite eachothers leases on the PVC
+# In the future this can be fixed with a primary/secondary if you can bind a static IP to the pods
+replicas: 1 
+
+# For changing the default image for the DHCP Server
+image:
+  repository: dhcp-server-k8s
+
+
+resources: 
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+podSecurityContext:
+  fsGroup: 1000
+
+pvc:
+  enabled: true
+  storageClassName: ""
+  storage: 5Gi
+
+backup:
+  enabled: true
+  schedule: "0 2 * * *"
+  s3:
+    endpoint: "test.com"
+    accessKey: "test"
+    secretKey: "test"
+    bucketName: "dhcp-server-backups"
+    path: "dhcp-server"
+
+
+# Global includes all common DHCP configuration such as lease time and options 
+global:
+  defaultLeaseTime: "600"
+  maxLeaseTime: "7200"
+  option:
+    - name: domain-name
+      value: "vm.lootbot.cloud"
+    - name: domain-name-servers
+      value: "192.168.1.1"
+  extra: ""
+
+# Subnet: a DHCP subnet block defined by the ip CIDR you want DHCP to lisen on
+#   - a subnet needs to be finded for every ip range an interface has, 
+#   - EX (ens-192) has an ip address 192.168.1.100, you would need to define the 
+#     subnet 192.168.1.0/24 so DHCP can lisen and respond on that interface
+subnet:
+  - name: example-1
+    cidr: "192.168.1.0"
+    netmask: "255.255.255.0"
+    defaultLeaseTime: "600"
+    maxLeaseTime: "7200"
+    range: 
+      - first: "192.168.1.20"
+        last: "192.168.1.254"
+    option:
+      - name: domain-name-servers
+        value: "192.168.1.1"
+      - name: routers
+        value: "192.168.1.1"
+      - name: broadcast-address
+        value: "192.168.1.255"
+
+  - name: kubernetes
+    cidr: "10.42.0.16"
+    netmask: "255.255.255.0"
+    defaultLeaseTime: ""
+    maxLeaseTime: ""
+    range: []
+    option: []

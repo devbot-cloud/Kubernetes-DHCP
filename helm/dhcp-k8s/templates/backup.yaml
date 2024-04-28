@@ -1,0 +1,61 @@
+{{- if .Values.backup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "dhcp-k8s.primaryname" . }}-backup
+  labels:
+    {{- include "dhcp-k8s.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.backup.schedule | quote }}
+  concurrencyPolicy: "Forbid"
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          affinity:
+            podAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+              - labelSelector:
+                  matchLabels:
+                    {{- include "dhcp-k8s.primarylabels" . | nindent 20 }}
+                topologyKey: "kubernetes.io/hostname"
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          containers:
+          - name: backup
+            image: "{{ .Values.backup.image.repository }}:{{ .Values.backup.image.tag }}"
+            imagePullPolicy: {{ .Values.backup.image.pullPolicy }}
+            securityContext:
+              {{- toYaml .Values.securityContext | nindent 14 }}
+            envFrom:
+            - secretRef:
+                name: {{ include "dhcp-k8s.fullname" . }}-s3
+            volumeMounts:
+            - name: leases
+              mountPath: /dhcpd/leases
+              readOnly: true
+            - name: config
+              mountPath: /dhcpd/config
+              readOnly: true
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "256Mi"
+              limits:
+                cpu: "200m"
+                memory: "512Mi"
+          restartPolicy: OnFailure
+          volumes:
+          - name: leases
+            persistentVolumeClaim:
+              claimName: {{ include "dhcp-k8s.primaryname" . }}
+          - name: config
+            configMap:
+              name: {{ include "dhcp-k8s.primaryname" . }}
+{{- end }}
